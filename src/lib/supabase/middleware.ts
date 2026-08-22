@@ -6,10 +6,10 @@ const authRoutes = ["/login", "/signup"];
 
 export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // If not configured, just pass through (dev mock mode) — no auth enforcement
-  if (!url || !key || url.includes("YOUR_PROJECT")) {
+  if (!url || !key || url.includes("YOUR_PROJECT") || key.includes("YOUR_")) {
     return NextResponse.next({ request });
   }
 

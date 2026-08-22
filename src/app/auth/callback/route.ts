@@ -10,8 +10,8 @@ export async function GET(request: Request) {
   if (code) {
     const cookieStore = cookies();
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (url && key && !url.includes("YOUR_PROJECT")) {
+    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (url && key && !url.includes("YOUR_PROJECT") && !key.includes("YOUR_")) {
       const supabase = createServerClient(url, key, {
         cookies: {
           getAll() {
