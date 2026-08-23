@@ -2,7 +2,7 @@
 -- Run with: supabase db push  (or psql)
 -- Requires Supabase project URL and service_role key set in .env
 
-enable extension if not exists "pgcrypto";
+create extension if not exists "pgcrypto";
 
 -- profiles
 create table if not exists public.profiles (
