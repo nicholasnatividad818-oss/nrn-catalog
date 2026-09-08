@@ -34,7 +34,11 @@ export default function ImportPage() {
   const doImport = () => {
     if (!data.length) return;
     const store = getStore();
-    const existingIsrcs = new Set(store.tracks.map((t) => (t.isrc || "").replace(/-/g, "").toUpperCase()).filter(Boolean));
+    const existingIsrcs = new Set(
+      store.tracks
+        .map((t) => (t.isrc || "").replace(/-/g, "").toUpperCase())
+        .filter(Boolean)
+    );
     let blocked = 0;
     let added = 0;
     const newTracks: Track[] = [];
@@ -78,7 +82,9 @@ export default function ImportPage() {
     if (newTracks.length) {
       setStore((s) => ({ ...s, tracks: [...s.tracks, ...newTracks] }));
     }
-    setImportMsg(`Imported ${added} tracks. ${blocked ? `Blocked ${blocked} duplicate ISRC(s).` : ""}`);
+    setImportMsg(
+      `Imported ${added} tracks. ${blocked ? `Blocked ${blocked} duplicate ISRC(s).` : ""}`
+    );
   };
 
   const download = (filtered?: Track[]) => {
@@ -98,22 +104,58 @@ export default function ImportPage() {
       <div className="space-y-4">
         <h1 className="font-serif text-2xl">Import / Export</h1>
         <div className="flex gap-2 border-b border-nrn-border pb-2">
-          <button onClick={() => setTab("import")} className={`px-4 py-1.5 text-xs font-mono tracking-widest border ${tab === "import" ? "bg-nrn-paper text-nrn-black border-nrn-paper" : "border-nrn-border text-nrn-paper/60"}`}>Import</button>
-          <button onClick={() => setTab("export")} className={`px-4 py-1.5 text-xs font-mono tracking-widest border ${tab === "export" ? "bg-nrn-paper text-nrn-black border-nrn-paper" : "border-nrn-border text-nrn-paper/60"}`}>Export</button>
+          <button
+            onClick={() => setTab("import")}
+            className={`px-4 py-1.5 text-xs font-mono tracking-widest border ${
+              tab === "import"
+                ? "bg-nrn-paper text-nrn-black border-nrn-paper"
+                : "border-nrn-border text-nrn-paper/60"
+            }`}
+          >
+            IMPORT
+          </button>
+          <button
+            onClick={() => setTab("export")}
+            className={`px-4 py-1.5 text-xs font-mono tracking-widest border ${
+              tab === "export"
+                ? "bg-nrn-paper text-nrn-black border-nrn-paper"
+                : "border-nrn-border text-nrn-paper/60"
+            }`}
+          >
+            EXPORT
+          </button>
         </div>
 
         {tab === "import" && (
           <div className="space-y-4">
             <div className="border border-nrn-border bg-nrn-surface p-5">
-              <p className="text-sm text-nrn-paper/60 mb-3">Upload a CSV exported from any distributor. Headers are auto-mapped (aliases supported). Duplicate ISRCs are blocked.</p>
-              <input type="file" accept=".csv" onChange={(e) => handleFile(e.target.files?.[0] || null)} className="block w-full text-sm file:mr-3 file:bg-nrn-purple file:text-white file:border file:border-nrn-purple file:px-3 file:py-1.5 file:font-mono file:text-xs file:tracking-widest" />
-              {raw && <p className="font-mono text-[11px] text-nrn-paper/40 mt-2">{raw.split("\n").length} lines • {data.length} rows parsed</p>}
+              <p className="text-sm text-nrn-paper/60 mb-3">
+                Upload a CSV exported from any distributor. Headers are auto-mapped
+                (aliases supported). Duplicate ISRCs are blocked.
+              </p>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => handleFile(e.target.files?.[0] || null)}
+                className="block w-full text-sm file:mr-3 file:bg-nrn-purple file:text-white file:border file:border-nrn-purple file:px-3 file:py-1 file:text-xs file:font-mono file:tracking-widest file:cursor-pointer hover:file:bg-nrn-purpleMuted"
+              />
+              {raw && (
+                <p className="font-mono text-[11px] text-nrn-paper/40 mt-2">
+                  {raw.split("\n").length} lines • {data.length} rows parsed
+                </p>
+              )}
             </div>
 
             {errors.length > 0 && (
               <div className="border border-amber-800 bg-amber-900/20 p-3">
-                <div className="font-mono text-[11px] text-amber-300 mb-1">Parse warnings</div>
-                {errors.map((e, i) => <div key={i} className="text-xs font-mono text-amber-200/80">{e}</div>)}
+                <div className="font-mono text-[11px] text-amber-300 mb-1">
+                  Parse warnings
+                </div>
+                {errors.map((e, i) => (
+                  <div key={i} className="text-xs font-mono text-amber-200/80">
+                    {e}
+                  </div>
+                ))}
               </div>
             )}
 
@@ -123,26 +165,60 @@ export default function ImportPage() {
                   <table className="w-full text-xs">
                     <thead className="bg-nrn-charcoal font-mono text-[10px] tracking-widest text-nrn-paper/60 sticky top-0">
                       <tr>
-                        {Object.keys(data[0] || {}).slice(0, 8).map((k) => <th key={k} className="text-left px-2 py-1 border-b border-nrn-border">{k}</th>)}
+                        {Object.keys(data[0] || {})
+                          .slice(0, 8)
+                          .map((k) => (
+                            <th
+                              key={k}
+                              className="text-left px-2 py-1 border-b border-nrn-border"
+                            >
+                              {k}
+                            </th>
+                          ))}
                         <th className="px-2 py-1">…</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.slice(0, 20).map((row, i) => (
                         <tr key={i} className="border-b border-nrn-border">
-                          {Object.values(row).slice(0, 8).map((v, j) => <td key={j} className="px-2 py-1 truncate max-w-[120px]">{String(v).slice(0, 40)}</td>)}
+                          {Object.values(row)
+                            .slice(0, 8)
+                            .map((v, j) => (
+                              <td
+                                key={j}
+                                className="px-2 py-1 truncate max-w-[120px]"
+                              >
+                                {String(v).slice(0, 40)}
+                              </td>
+                            ))}
                           <td className="px-2 py-1 text-nrn-paper/30">…</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {data.length > 20 && <div className="text-center font-mono text-[11px] text-nrn-paper/40 py-2">+{data.length - 20} more rows</div>}
+                  {data.length > 20 && (
+                    <div className="text-center font-mono text-[11px] text-nrn-paper/40 py-2">
+                      +{data.length - 20} more rows
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={doImport}>Import {data.length} rows</Button>
-                  <Button variant="outline" onClick={() => { setData([]); setRaw(""); setErrors([]); setImportMsg(""); }}>Clear</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setData([]);
+                      setRaw("");
+                      setErrors([]);
+                      setImportMsg("");
+                    }}
+                  >
+                    Clear
+                  </Button>
                 </div>
-                {importMsg && <p className="text-sm font-mono text-emerald-300">{importMsg}</p>}
+                {importMsg && (
+                  <p className="text-sm font-mono text-emerald-300">{importMsg}</p>
+                )}
               </div>
             )}
           </div>
@@ -151,19 +227,59 @@ export default function ImportPage() {
         {tab === "export" && (
           <div className="space-y-4">
             <div className="border border-nrn-border bg-nrn-surface p-5">
-              <p className="text-sm text-nrn-paper/60 mb-3">Download your entire catalog or a filtered slice as CSV.</p>
-              <Button onClick={() => download()}>Download All ({tracks.length} tracks)</Button>
+              <p className="text-sm text-nrn-paper/60 mb-3">
+                Download your entire catalog or a filtered slice as CSV.
+              </p>
+              <Button onClick={() => download()}>
+                Download All ({tracks.length} tracks)
+              </Button>
             </div>
             <div className="border border-nrn-border bg-nrn-charcoal p-5">
-              <h3 className="font-mono text-[11px] tracking-widest text-nrn-paper/60 mb-2">PER-FILTER EXPORT</h3>
+              <h3 className="font-mono text-[11px] tracking-widest text-nrn-paper/60 mb-2">
+                PER-FILTER EXPORT
+              </h3>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => download(tracks.filter((t) => !!t.genre))}>With genre ({tracks.filter((t) => !!t.genre).length})</Button>
-                <Button size="sm" variant="outline" onClick={() => download(tracks.filter((t) => !!t.isrc))}>With ISRC ({tracks.filter((t) => !!t.isrc).length})</Button>
-                <Button size="sm" variant="outline" onClick={() => download(tracks.filter((t) => !t.isrc))}>Missing ISRC ({tracks.filter((t) => !t.isrc).length})</Button>
-                <Button size="sm" variant="outline" onClick={() => download(tracks.filter((t) => !t.lyrics))}>Missing Lyrics ({tracks.filter((t) => !t.lyrics).length})</Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    download(tracks.filter((t) => !!t.genre))
+                  }
+                >
+                  With genre ({tracks.filter((t) => !!t.genre).length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    download(tracks.filter((t) => !!t.isrc))
+                  }
+                >
+                  With ISRC ({tracks.filter((t) => !!t.isrc).length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    download(tracks.filter((t) => !t.isrc))
+                  }
+                >
+                  Missing ISRC ({tracks.filter((t) => !t.isrc).length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    download(tracks.filter((t) => !t.lyrics))
+                  }
+                >
+                  Missing Lyrics ({tracks.filter((t) => !t.lyrics).length})
+                </Button>
               </div>
             </div>
-            <pre className="border border-nrn-border bg-nrn-black p-3 text-[11px] font-mono text-nrn-paper/30 overflow-auto max-h-40">{tracksToCsv(tracks).slice(0, 600) || "—"}</pre>
+            <pre className="border border-nrn-border bg-nrn-black p-3 text-[11px] font-mono text-nrn-paper/30 overflow-auto max-h-40">
+              {tracksToCsv(tracks).slice(0, 600) || "—"}
+            </pre>
           </div>
         )}
       </div>

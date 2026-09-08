@@ -82,7 +82,10 @@ export function tracksToCsv(tracks: Track[]): string {
   return Papa.unparse(rows, { columns: [...CSV_HEADERS] as string[] });
 }
 
-export function parseCsv(text: string): { data: Record<string, string>[]; errors: string[] } {
+export function parseCsv(text: string): {
+  data: Record<string, string>[];
+  errors: string[];
+} {
   const result = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,
