@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 export function Input(
   props: InputHTMLAttributes<HTMLInputElement> & {
@@ -43,12 +43,12 @@ export function Textarea(
 }
 
 export function Select(
-  props: InputHTMLAttributes<HTMLSelectElement> & {
+  props: SelectHTMLAttributes<HTMLSelectElement> & {
     label?: string;
     options: string[];
   }
 ) {
-  const { label, options, className = "", ...rest } = props as any;
+  const { label, options, className = "", ...rest } = props;
   return (
     <div className="space-y-1">
       {label && (
@@ -61,7 +61,7 @@ export function Select(
         className={`w-full bg-nrn-surface border border-nrn-border px-3 py-2 text-sm text-nrn-paper focus:border-nrn-purple focus:outline-none ${className}`}
       >
         <option value="">—</option>
-        {options.map((o: string) => (
+        {options.map((o) => (
           <option key={o} value={o}>
             {o}
           </option>

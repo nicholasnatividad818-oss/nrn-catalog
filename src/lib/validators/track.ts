@@ -46,8 +46,14 @@ export const trackSchema = z.object({
 
 export type TrackInput = z.infer<typeof trackSchema>;
 
-export function isrcExists(tracks: { isrc?: string }[], isrc: string, excludeId?: string) {
+export function isrcExists(
+  tracks: { id?: string; isrc?: string }[],
+  isrc: string,
+  excludeId?: string
+) {
   if (!isrc) return false;
   const norm = isrc.replace(/-/g, "").toUpperCase();
-  return tracks.some((t) => t.isrc?.replace(/-/g, "").toUpperCase() === norm && (t as any).id !== excludeId);
+  return tracks.some(
+    (t) => t.isrc?.replace(/-/g, "").toUpperCase() === norm && t.id !== excludeId
+  );
 }
