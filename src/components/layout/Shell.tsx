@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { hydrateCatalog } from "@/lib/store";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: "◉" },
@@ -22,9 +23,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!configured) return;
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? null);
+      if (data.user) void hydrateCatalog();
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? null);
+      if (session?.user) void hydrateCatalog();
     });
     return () => sub.subscription.unsubscribe();
   }, [configured]);
@@ -32,13 +38,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const handleSignOut = async () => {
     if (!configured) return;
     const supabase = createClient();
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
   };
   return (
     <div className="min-h-screen bg-nrn-black">
-      {/* top bar */}
       <header className="sticky top-0 z-30 border-b border-nrn-border bg-nrn-black/80 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
@@ -77,7 +83,6 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="mx-auto max-w-[1400px] flex">
-        {/* sidebar desktop */}
         <aside className="hidden md:block w-[220px] shrink-0 border-r border-nrn-border min-h-[calc(100vh-49px)]">
           <nav className="p-4 space-y-1">
             {nav.map((n) => {
@@ -121,7 +126,6 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        {/* mobile overlay */}
         {open && (
           <div className="fixed inset-0 z-40 md:hidden">
             <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
@@ -137,7 +141,6 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* main */}
         <main className="flex-1 min-w-0 bg-nrn-black">
           <div className="px-4 md:px-8 py-6 md:py-8">{children}</div>
         </main>
