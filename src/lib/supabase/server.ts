@@ -1,31 +1,37 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createClient() {
+function publicConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key || url.includes("YOUR_PROJECT") || key.includes("YOUR_")) {
-    return null as any;
-  }
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const ok = !!(url && key && !url.includes("YOUR_PROJECT") && !key.includes("YOUR_"));
+  return { url, key, ok };
+}
+
+export async function createClient() {
+  const { url, key, ok } = publicConfig();
+  if (!ok || !url || !key) return null;
   const cookieStore = cookies();
   return createServerClient(url, key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
+      setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }: { name: string; value: string; options: any }) =>
+          cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options)
           );
-        } catch {}
+        } catch {
+          /* Server Component — middleware refreshes session */
+        }
       },
     },
   });
 }
 
 export function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return !!(url && key && !url.includes("YOUR_PROJECT") && !key.includes("YOUR_"));
+  return publicConfig().ok;
 }

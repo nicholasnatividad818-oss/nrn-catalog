@@ -3,6 +3,7 @@ import Shell from "@/components/layout/Shell";
 import TrackForm from "@/components/catalog/TrackForm";
 import { TrackInput } from "@/lib/validators/track";
 import { setStore } from "@/lib/store";
+import { Track } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
 export default function NewTrackPage() {
@@ -10,9 +11,10 @@ export default function NewTrackPage() {
   const onSave = (data: TrackInput) => {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
+    const track: Track = { id, createdAt: now, updatedAt: now, ...data };
     setStore((s) => ({
       ...s,
-      tracks: [...s.tracks, { id, createdAt: now, updatedAt: now, ...data } as any],
+      tracks: [...s.tracks, track],
     }));
     router.push("/catalog");
   };

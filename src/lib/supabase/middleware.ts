@@ -17,7 +17,6 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // If not configured, just pass through (dev mock mode) — no auth enforcement
   if (!url || !key || url.includes("YOUR_PROJECT") || key.includes("YOUR_")) {
     return NextResponse.next({ request });
   }
@@ -28,16 +27,11 @@ export async function updateSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(
-        cookiesToSet: { name: string; value: string; options: any }[]
-      ) {
-        cookiesToSet.forEach(({ name, value }: { name: string; value: string }) =>
-          request.cookies.set(name, value)
-        );
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(
-          ({ name, value, options }: { name: string; value: string; options: any }) =>
-            supabaseResponse.cookies.set(name, value, options)
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
         );
       },
     },
@@ -55,15 +49,14 @@ export async function updateSession(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
 
-  // Redirect unauthenticated users away from protected routes
   if (!user && isProtected) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
+    redirectUrl.search = "";
     redirectUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Redirect authenticated users away from login/signup to dashboard
   if (user && isAuthRoute) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/dashboard";
