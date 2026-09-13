@@ -1,6 +1,8 @@
 "use client";
 
 import { Track, Release } from "./types";
+import { isSupabaseConfigured } from "./supabase/client";
+import { fetchRemoteCatalog, persistRemoteCatalog } from "./supabase/catalog";
 
 const STORAGE_KEY = "nrn_catalog_v1";
 
@@ -77,12 +79,32 @@ const seedReleases: Release[] = [
 ];
 
 function load(): Store {
-  if (typeof window === "undefined") return { tracks: seedTracks, releases: seedReleases };
+  if (typeof window === "undefined") {
+    return isSupabaseConfigured()
+      ? { tracks: [], releases: [] }
+      : { tracks: seedTracks, releases: seedReleases };
+  }
+  if (isSupabaseConfigured()) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Store;
+        if (Array.isArray(parsed.tracks)) {
+          return { tracks: parsed.tracks, releases: parsed.releases || [] };
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return { tracks: [], releases: [] };
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { tracks: seedTracks, releases: seedReleases };
     const parsed = JSON.parse(raw);
-    if (!parsed.tracks || !Array.isArray(parsed.tracks)) return { tracks: seedTracks, releases: seedReleases };
+    if (!parsed.tracks || !Array.isArray(parsed.tracks)) {
+      return { tracks: seedTracks, releases: seedReleases };
+    }
     return { tracks: parsed.tracks, releases: parsed.releases || seedReleases };
   } catch {
     return { tracks: seedTracks, releases: seedReleases };
@@ -94,7 +116,14 @@ function save(store: Store) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
+function notify() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("nrn_store_update"));
+  }
+}
+
 let memory: Store | null = null;
+let hydrating = false;
 
 export function getStore(): Store {
   if (memory) return memory;
@@ -106,13 +135,35 @@ export function setStore(updater: (s: Store) => Store) {
   const current = getStore();
   memory = updater(current);
   save(memory);
-  window.dispatchEvent(new Event("nrn_store_update"));
+  notify();
+  if (isSupabaseConfigured()) {
+    void persistRemoteCatalog(memory).catch((err) => console.error("persist catalog", err));
+  }
 }
 
 export function resetStore() {
   if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
-  memory = { tracks: [...seedTracks], releases: [...seedReleases] };
+  memory = isSupabaseConfigured()
+    ? { tracks: [], releases: [] }
+    : { tracks: [...seedTracks], releases: [...seedReleases] };
   if (typeof window !== "undefined") save(memory);
+  notify();
+}
+
+export async function hydrateCatalog() {
+  if (!isSupabaseConfigured() || hydrating) return;
+  hydrating = true;
+  try {
+    const remote = await fetchRemoteCatalog();
+    if (!remote) return;
+    memory = remote;
+    save(memory);
+    notify();
+  } catch (err) {
+    console.error("hydrate catalog", err);
+  } finally {
+    hydrating = false;
+  }
 }
 
 export function healthForTrack(t: Track) {
