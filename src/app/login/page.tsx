@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInSchema, SignInInput } from "@/lib/validators/auth";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { hydrateCatalog } from "@/lib/store";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
@@ -27,12 +28,16 @@ export default function LoginPage() {
   const onSubmit = async (data: SignInInput) => {
     setServerError(null);
     if (!configured) {
-      setServerError("Supabase not configured — running in local mode. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.");
+      setServerError("Supabase not configured — running in local mode. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
       return;
     }
     setLoading(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        setServerError("Supabase client unavailable.");
+        return;
+      }
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -41,10 +46,11 @@ export default function LoginPage() {
         setServerError(error.message);
         return;
       }
+      await hydrateCatalog();
       router.push("/dashboard");
       router.refresh();
-    } catch (e: any) {
-      setServerError(e?.message || "Sign in failed");
+    } catch (e) {
+      setServerError(e instanceof Error ? e.message : "Sign in failed");
     } finally {
       setLoading(false);
     }
@@ -79,9 +85,6 @@ export default function LoginPage() {
           </form>
           <p className="font-mono text-xs text-nrn-paper/50 mt-4 text-center">
             No account? <Link href="/signup" className="text-nrn-purpleLight underline">Sign up</Link>
-          </p>
-          <p className="font-mono text-[11px] text-nrn-paper/30 mt-3 text-center">
-            Passwords validated server-side via Supabase Auth. Owner ID never trusted from client.
           </p>
         </div>
       </div>
