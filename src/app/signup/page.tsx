@@ -29,12 +29,16 @@ export default function SignupPage() {
     setServerError(null);
     setSuccess(null);
     if (!configured) {
-      setServerError("Supabase not configured — running in local mode. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.");
+      setServerError("Supabase not configured — running in local mode.");
       return;
     }
     setLoading(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        setServerError("Supabase client unavailable.");
+        return;
+      }
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -46,8 +50,8 @@ export default function SignupPage() {
       }
       setSuccess("Account created. Check your email to confirm, then sign in.");
       setTimeout(() => router.push("/login"), 1500);
-    } catch (e: any) {
-      setServerError(e?.message || "Sign up failed");
+    } catch (e) {
+      setServerError(e instanceof Error ? e.message : "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -72,11 +76,11 @@ export default function SignupPage() {
               {errors.email && <p className="text-[11px] font-mono text-red-400 mt-1">{errors.email.message}</p>}
             </div>
             <div>
-              <Input label="Password *" type="password" {...register("password")} placeholder="•••••••• (min 8)" autoComplete="new-password" />
+              <Input label="Password *" type="password" {...register("password")} placeholder="min 8" autoComplete="new-password" />
               {errors.password && <p className="text-[11px] font-mono text-red-400 mt-1">{errors.password.message}</p>}
             </div>
             <div>
-              <Input label="Confirm Password *" type="password" {...register("confirmPassword")} placeholder="••••••••" autoComplete="new-password" />
+              <Input label="Confirm Password *" type="password" {...register("confirmPassword")} placeholder="confirm" autoComplete="new-password" />
               {errors.confirmPassword && <p className="text-[11px] font-mono text-red-400 mt-1">{errors.confirmPassword.message}</p>}
             </div>
             {serverError && <p className="text-[11px] font-mono text-red-400 border border-red-900 bg-red-900/20 px-3 py-2">{serverError}</p>}
@@ -87,9 +91,6 @@ export default function SignupPage() {
           </form>
           <p className="font-mono text-xs text-nrn-paper/50 mt-4 text-center">
             Already have an account? <Link href="/login" className="text-nrn-purpleLight underline">Sign in</Link>
-          </p>
-          <p className="font-mono text-[11px] text-nrn-paper/30 mt-3 text-center">
-            Email + password validated with Zod server-side. Supabase generates user_id; client never supplies owner ID.
           </p>
         </div>
       </div>
