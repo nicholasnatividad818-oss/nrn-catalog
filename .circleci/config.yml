@@ -1,0 +1,22 @@
+version: 2.1
+
+jobs:
+  validate:
+    docker:
+      - image: cimg/node:22.22
+    steps:
+      - checkout
+      - run:
+          name: Install locked dependencies
+          command: npm ci
+      - run:
+          name: Lint
+          command: npm run lint
+      - run:
+          name: Check TypeScript
+          command: npm run typecheck
+
+workflows:
+  validate:
+    jobs:
+      - validate
