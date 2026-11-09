@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+soundcloud-tracks.json
+soundcloud-songstats-report*.csv
+.env
+.env.*
+tokens*.json
